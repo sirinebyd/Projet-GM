@@ -1,0 +1,43 @@
+# === MODULE 1 : CINEMATIQUE ET VITESSE ===
+pl Marche_Normale (1)
+pl Alerte_Vitesse (0)
+pl Freinage_Service (0)
+pl Freinage_Urgence (0)
+pl Train_Arrete (0)
+
+# Boucle de vitesse
+tr T_Survitesse Marche_Normale -> Alerte_Vitesse
+tr T_Conducteur_Ralentit Alerte_Vitesse -> Marche_Normale
+tr T_Ignorer_Alerte Alerte_Vitesse -> Freinage_Service
+tr T_Echec_Service Freinage_Service -> Freinage_Urgence
+
+# Immobilisation et Redémarrage
+tr T_Arret_Complet Freinage_Urgence -> Train_Arrete
+tr T_Reprise_Marche Train_Arrete -> Marche_Normale
+
+# === MODULE 2 : COMMUNICATION GSM-R ===
+pl Radio_OK (1)
+pl Radio_Perdue (0)
+
+# Aléas de réseau
+tr T_Perte_Liaison Radio_OK -> Radio_Perdue
+tr T_Reparation_Radio Radio_Perdue -> Radio_OK
+
+# === MODULE 3 : ODOMETRIE ET BALISES ===
+pl Odometrie_OK (1)
+pl Derive_Odo (0)
+
+# Aléas de capteurs et Recalage
+tr T_Erreur_Capteur Odometrie_OK -> Derive_Odo
+tr T_Recalage_Balise Derive_Odo -> Odometrie_OK
+
+# === MECANISMES DE FAIL-SAFE (SECURITE ABSOLUE) ===
+# 1. Pannes Radio menant à l'urgence (Le jeton de panne est conservé pour mémoire)
+tr T_Urgence_Radio_Marche Marche_Normale Radio_Perdue -> Freinage_Urgence Radio_Perdue
+tr T_Urgence_Radio_Alerte Alerte_Vitesse Radio_Perdue -> Freinage_Urgence Radio_Perdue
+tr T_Urgence_Radio_Service Freinage_Service Radio_Perdue -> Freinage_Urgence Radio_Perdue
+
+# 2. Pannes d'Odométrie menant à l'urgence
+tr T_Urgence_Odo_Marche Marche_Normale Derive_Odo -> Freinage_Urgence Derive_Odo
+tr T_Urgence_Odo_Alerte Alerte_Vitesse Derive_Odo -> Freinage_Urgence Derive_Odo
+tr T_Urgence_Odo_Service Freinage_Service Derive_Odo -> Freinage_Urgence Derive_Odo
